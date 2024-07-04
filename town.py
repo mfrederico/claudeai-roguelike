@@ -35,12 +35,11 @@ def generate_towns(world_map):
     
     print(f"Generated {len(towns)} towns")
     for town in towns:
-        print(f"Town: {town.name} at ({town.x}, {town.y})")
+        print(f"Town: {town.name} at ({town.x}, {town.y}), entrance at ({town.entrance_x}, {town.entrance_y})")
     
     return towns
 
 def is_suitable_town_location(world_map, x, y):
-    # Check if the town fits within the map boundaries
     return (0 <= x < world_map.width - config.TOWN_SIZE and
             0 <= y < world_map.height - config.TOWN_SIZE)
 
@@ -64,23 +63,27 @@ def generate_path(world_map, town1, town2):
     x1, y1 = town1.entrance_x, town1.entrance_y
     x2, y2 = town2.entrance_x, town2.entrance_y
     
-    # Use a simple line drawing algorithm to create the path
-    dx = abs(x2 - x1)
-    dy = abs(y2 - y1)
-    sx = 1 if x1 < x2 else -1
-    sy = 1 if y1 < y2 else -1
-    err = dx - dy
-    
-    while x1 != x2 or y1 != y2:
-        if 0 <= x1 < world_map.width and 0 <= y1 < world_map.height:
-            if world_map.tiles[y1][x1] not in ['Rocky Terrain', 'Town Entrance', 'Ocean']:
-                world_map.tiles[y1][x1] = 'Cobblestone'
-        
-        e2 = 2 * err
-        if e2 > -dy:
-            err -= dy
-            x1 += sx
-        if e2 < dx:
-            err += dx
-            y1 += sy
+    # Determine which direction to go first (horizontal or vertical)
+    if random.choice([True, False]):
+        # Horizontal first, then vertical
+        generate_path_segment(world_map, x1, y1, x2, y1)
+        generate_path_segment(world_map, x2, y1, x2, y2)
+    else:
+        # Vertical first, then horizontal
+        generate_path_segment(world_map, x1, y1, x1, y2)
+        generate_path_segment(world_map, x1, y2, x2, y2)
 
+def generate_path_segment(world_map, x1, y1, x2, y2):
+    dx = 1 if x2 > x1 else -1 if x2 < x1 else 0
+    dy = 1 if y2 > y1 else -1 if y2 < y1 else 0
+    
+    current_x, current_y = x1, y1
+    while current_x != x2 or current_y != y2:
+        if 0 <= current_x < world_map.width and 0 <= current_y < world_map.height:
+            if world_map.tiles[current_y][current_x] not in ['Rocky Terrain', 'Town Entrance', 'Ocean']:
+                world_map.tiles[current_y][current_x] = 'Cobblestone'
+        
+        if current_x != x2:
+            current_x += dx
+        elif current_y != y2:
+            current_y += dy
