@@ -11,7 +11,7 @@ SCREEN_WIDTH = 80
 SCREEN_HEIGHT = 24
 
 # Game mechanics
-NUM_MONSTERS = 50
+NUM_MONSTERS = 150
 MONSTER_MOVE_CHANCE = 0.5  # 50% chance for a monster to move each turn
 
 # Monster spawning

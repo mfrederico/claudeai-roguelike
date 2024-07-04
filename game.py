@@ -113,8 +113,7 @@ class Game:
                 new_x, new_y = self.player.x + dx, self.player.y + dy
                 if self.map.is_passable(new_x, new_y):
                     self.player.move(dx, dy)
-                    self.player.heal()
-                    healed_amount = round(self.player.attributes['magic'] / self.player.max_hit_points, 2)
+                    healed_amount = self.player.heal()
                     self.message_log.add(f"Player moved {action} and healed {healed_amount} HP")
                     self.update_monsters()
                     self.check_for_combat()
@@ -158,6 +157,6 @@ class Game:
             if not self.in_combat:
                 self.map.render(self.player, self.monsters)
                 self.message_log.display()
-            update_result = self.update()
-            if update_result is False:
+                print("\nUse WASD to move, Q to quit")
+            if not self.update():
                 break

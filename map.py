@@ -70,16 +70,17 @@ class GameMap:
         print('\033[H\033[J', end='')  # Clear screen
         self.update_camera(player.x, player.y)
 
+        # Render the map
         for y in range(config.SCREEN_HEIGHT):
             for x in range(config.SCREEN_WIDTH):
                 map_x = x + self.camera_x
                 map_y = y + self.camera_y
-                
+
                 if 0 <= map_x < self.width and 0 <= map_y < self.height:
                     terrain = self.tiles[map_y][map_x]
                     char = TERRAIN_TYPES[terrain]['char']
                     color = TERRAIN_TYPES[terrain]['color']
-                    
+
                     monster_here = next((m for m in monsters if m.x == map_x and m.y == map_y), None)
                     if monster_here:
                         char = monster_here.char
@@ -97,12 +98,10 @@ class GameMap:
                     print(' ', end='')
             print()
 
-        print(f"\nPlayer: HP: {player.attributes['hit_points']} | "
+        # Render player stats
+        print(f"\nPlayer: HP: {player.get_hit_points():.2f}/{player.max_hit_points} | "
               f"Power: {player.attributes['power']} | "
               f"Magic: {player.attributes['magic']} | "
               f"Clarity: {player.attributes['clarity']} | "
               f"XP: {player.attributes['experience']} | "
               f"Level: {player.attributes['level']}")
-
-        print("\nUse WASD to move, Q to quit")
-

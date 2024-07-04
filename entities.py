@@ -37,6 +37,12 @@ class Entity:
         self.x += dx
         self.y += dy
 
+    def get_hit_points(self):
+        return round(self.attributes['hit_points'], 2)
+
+    def set_hit_points(self, value):
+        self.attributes['hit_points'] = round(value, 2)
+
 class Player(Entity):
     def __init__(self, x, y):
         super().__init__(x, y, '@', 'Player', config.COLOR_PLAYER)
@@ -49,7 +55,9 @@ class Player(Entity):
 
     def heal(self):
         heal_amount = self.attributes['magic'] / self.max_hit_points
-        self.attributes['hit_points'] = min(self.max_hit_points, self.attributes['hit_points'] + heal_amount)
+        new_hp = min(self.max_hit_points, self.get_hit_points() + heal_amount)
+        self.set_hit_points(new_hp)
+        return round(heal_amount, 2)
 
 class Monster(Entity):
     def __init__(self, x, y):
