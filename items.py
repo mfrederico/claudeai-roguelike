@@ -27,15 +27,6 @@ class Armor(Item):
     def get_description(self):
         return f"{self.armor_type} Armor (Protection: {self.protection * 100:.0f}%)"
 
-def generate_random_item():
-    item_type = random.choices(list(config.TREASURE_TYPES.keys()), 
-                               weights=list(config.TREASURE_TYPES.values()))[0]
-    if item_type == 'armor':
-        armor_type = random.choice(list(config.ARMOR_TYPES.keys()))
-        return Armor(armor_type)
-    # Add more item types here in the future
-    return None
-
 class Weapon(Item):
     def __init__(self, weapon_type):
         super().__init__(weapon_type, 'W', config.COLOR_PLAYER)
@@ -53,7 +44,7 @@ class Weapon(Item):
         return f"{self.weapon_type} (Attack Bonus: +{self.bonus * 100:.0f}%)"
 
 def generate_random_item():
-    item_type = random.choices(list(config.TREASURE_TYPES.keys()),
+    item_type = random.choices(list(config.TREASURE_TYPES.keys()), 
                                weights=list(config.TREASURE_TYPES.values()))[0]
     if item_type == 'armor':
         armor_type = random.choice(list(config.ARMOR_TYPES.keys()))

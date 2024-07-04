@@ -25,9 +25,10 @@ CHEST_CHAR = '▣'
 CHEST_COLOR = '\033[1;33m'  # Bright yellow
 NUM_CHESTS = 100  # Number of chests to spawn on the map
 
-# Treasure probabilities (can be expanded later)
+# Treasure probabilities
 TREASURE_TYPES = {
-    'armor': 1.0  # 100% chance of armor for now
+    'armor': 0.5,  # 50% chance of armor
+    'weapon': 0.5  # 50% chance of weapon
 }
 
 # Asset paths

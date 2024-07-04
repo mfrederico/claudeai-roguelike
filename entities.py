@@ -94,6 +94,11 @@ class Player(Entity):
             return f"Equipped {armor_type} armor."
         return "Invalid armor type."
 
+    def equip_weapon(self, weapon):
+        old_weapon = self.weapon
+        self.weapon = weapon
+        return f"Equipped {weapon.weapon_type}." + (f" Unequipped {old_weapon.weapon_type}." if old_weapon else "")
+
     def get_damage_reduction(self):
         if self.armor:
             return config.ARMOR_TYPES[self.armor]
@@ -105,11 +110,6 @@ class Player(Entity):
         self.set_hit_points(self.get_hit_points() - actual_damage)
         return actual_damage
 
-    def equip_weapon(self, weapon):
-        old_weapon = self.weapon
-        self.weapon = weapon
-        return f"Equipped {weapon.weapon_type}." + (f" Unequipped {old_weapon.weapon_type}." if old_weapon else "")
-
     def attack(self, target):
         base_damage = random.randint(1, self.attributes['power'])
         if self.weapon:
@@ -118,7 +118,6 @@ class Player(Entity):
             bonus_damage = base_damage * self.weapon.bonus
             return base_damage + bonus_damage
         return base_damage
-
 
 class Monster(Entity):
     def __init__(self, x, y):

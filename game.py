@@ -1,5 +1,6 @@
 from map import GameMap
 from entities import Player, Monster, Chest
+from items import Armor, Weapon  # Add this line
 from input_handler import InputHandler
 from message_log import MessageLog
 from combat import Combat
@@ -146,8 +147,11 @@ class Game:
 
         if self.current_chest.item:
             print(f"\nInside, you find: {self.current_chest.item.get_description()}")
-            print(f"\nYour current armor: {self.player.armor or 'None'}")
-            print("\nDo you want to equip this armor?")
+            if isinstance(self.current_chest.item, Armor):
+                print(f"\nYour current armor: {self.player.armor or 'None'}")
+            elif isinstance(self.current_chest.item, Weapon):
+                print(f"\nYour current weapon: {self.player.weapon.weapon_type if self.player.weapon else 'None'}")
+            print("\nDo you want to equip this item?")
             print("Press 'Y' to equip, or any other key to leave it.")
 
             action = self.input_handler.get_key().lower()
@@ -155,7 +159,7 @@ class Game:
                 result = self.current_chest.item.use(self.player)
                 self.message_log.add(result)
             else:
-                self.message_log.add("You decide to leave the armor.")
+                self.message_log.add("You decide to leave the item.")
         else:
             print("\nThe chest is empty.")
 
@@ -257,6 +261,7 @@ class Game:
                 new_x, new_y = monster.x + dx, monster.y + dy
                 if self.map.is_passable(new_x, new_y):
                     monster.move(dx, dy)
+
 
     def run(self):
         while True:
