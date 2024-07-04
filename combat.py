@@ -60,6 +60,7 @@ class Combat:
 
     def is_combat_over(self):
         if self.player.attributes['hit_points'] <= 0:
+            self.player.attributes['hit_points'] = 0  # Ensure HP doesn't go negative
             return True, "You have been defeated!"
         elif self.monster.attributes['hit_points'] <= 0:
             xp_gain = self.monster.attributes['level'] * config.XP_GAIN_MULTIPLIER

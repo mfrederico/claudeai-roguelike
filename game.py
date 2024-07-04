@@ -6,6 +6,30 @@ from combat import Combat
 import random
 import config
 
+def display_gravestone():
+    gravestone = r"""
+         .---.
+        /     \
+        |  R I P  |
+        |   He    |
+        |  Died   |
+        | Playing |
+        |   RPG   |
+        =========
+          \   /
+           \ /
+           |||
+           |||
+           |||
+           |||
+         \=====/
+
+    Game Over!
+    Press any key to exit...
+    """
+    print(gravestone)
+    input()
+
 class Game:
     def __init__(self):
         self.map = GameMap(config.MAP_WIDTH, config.MAP_HEIGHT)
@@ -108,12 +132,14 @@ class Game:
             print(message)
             input("Press Enter to continue...")
             self.in_combat = False
-            if "defeated" in message:
-                self.monsters.remove(self.current_combat.monster)
-                self.message_log.add(f"You defeated the {self.current_combat.monster.name}!")
-            elif "You have been defeated!" in message:
-                self.message_log.add("Game Over! You have been defeated.")
-                return False
+            if "defeated" in message.lower():
+                if "You have been defeated!" in message:
+                    self.message_log.add("Game Over! You have been defeated.")
+                    display_gravestone()
+                    return False
+                else:
+                    self.monsters.remove(self.current_combat.monster)
+                    self.message_log.add(f"You defeated the {self.current_combat.monster.name}!")
             self.current_combat = None
         return None
 
