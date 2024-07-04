@@ -6,4 +6,4 @@ I think its great, and I am having fun trying to learn python and also prompt en
 
 # FACEPALM
 This is probably my fifth iteration, and my prompt is pretty giant. Hoping to find out just what we can build with this thing.  
-
+It runs in a terminal because claude starts to get confused when you add too much pygame math.
