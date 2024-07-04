@@ -50,7 +50,6 @@ class Player(Entity):
         self.fov_radius = config.PLAYER_FOV_RADIUS
         self.max_hit_points = config.PLAYER_STARTING_HP
         self.xp_to_next_level = config.LEVEL_UP_BASE
-        self.armor = None
 
     def is_visible(self, x, y):
         distance = math.sqrt((x - self.x)**2 + (y - self.y)**2)
@@ -113,11 +112,15 @@ class Monster(Entity):
 
     def adjust_attributes(self):
         level_adjustment = random.randint(-2, 2)
-        self.attributes['level'] += level_adjustment
+        self.attributes['level'] = max(1, self.attributes['level'] + level_adjustment)
         self.attributes['hit_points'] = max(1, config.MONSTER_BASE_HP + level_adjustment * 10)
         self.attributes['power'] = max(1, config.MONSTER_BASE_POWER + level_adjustment * 2)
         self.attributes['magic'] = max(1, config.MONSTER_BASE_MAGIC + level_adjustment * 2)
         self.attributes['clarity'] = max(1, config.MONSTER_BASE_CLARITY + level_adjustment * 2)
+
+    def take_damage(self, damage):
+        self.attributes['hit_points'] = max(0, self.attributes['hit_points'] - damage)
+        return damage
 
 
 class Chest(Entity):
