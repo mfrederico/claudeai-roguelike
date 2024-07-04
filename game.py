@@ -27,18 +27,33 @@ class Game:
         self.current_town = None
 
     def initialize_game(self):
-        loaded_player = load_game()
+        loaded_player, loaded_towns = load_game()
         if loaded_player:
             self.player = loaded_player
+            self.towns = loaded_towns
             self.message_log = MessageLog()
             self.message_log.add("Game loaded successfully!")
         else:
             self.player = Player(config.MAP_WIDTH // 2, config.MAP_HEIGHT // 2)
+            self.towns = generate_towns(self.map)
             self.message_log = MessageLog()
 
         self.monsters = self.spawn_monsters(config.NUM_MONSTERS)
         self.chests = self.spawn_chests(config.NUM_CHESTS)
-        self.towns = generate_towns(self.map)
+
+        # If towns were loaded, place them on the map
+        if loaded_towns:
+            for town in self.towns:
+                self.place_town_on_map(town)
+
+    def place_town_on_map(self, town):
+        for i in range(town.width):
+            for j in range(town.height):
+                if i == 0 or i == town.width - 1 or j == 0 or j == town.height - 1:
+                    self.map.tiles[town.y + j][town.x + i] = 'Rocky Terrain'
+                else:
+                    self.map.tiles[town.y + j][town.x + i] = 'Cobblestone'
+        self.map.tiles[town.entrance_y][town.entrance_x] = 'Town Entrance'
 
     def spawn_chests(self, num_chests):
         chests = []
@@ -143,12 +158,8 @@ class Game:
         self.current_town = None
         return None
 
-    def save_game(self):
-        save_game(self.player)
-        self.message_log.add("Game saved successfully!")
-
     def save_and_quit(self):
-        self.save_game()
+        save_game(self.player, self.towns)
         self.message_log.add("Game saved. Thank you for playing!")
 
     def check_for_chest(self):
