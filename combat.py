@@ -49,9 +49,13 @@ class Combat:
         return stats
 
     def player_attack(self):
-        damage = random.randint(1, self.player.attributes['power'])
+        damage = self.player.attack(self.monster)
+        if damage == float('inf'):
+            self.monster.attributes['hit_points'] = 0
+            return f"Your {self.player.weapon.weapon_type} instantly defeats the {self.monster.name}!"
         actual_damage = self.monster.take_damage(damage)
-        return f"You deal {actual_damage:.2f} damage to the {self.monster.name}!"
+        weapon_message = f" with your {self.player.weapon.weapon_type}" if self.player.weapon else ""
+        return f"You deal {actual_damage:.2f} damage{weapon_message} to the {self.monster.name}!"
 
     def monster_attack(self):
         damage = random.randint(1, self.monster.attributes['power'])

@@ -263,6 +263,14 @@ class Game:
             if not self.in_combat and not self.in_chest_screen:
                 self.map.render(self.player, self.monsters, self.chests)
                 self.message_log.display()
+                print(f"\nPlayer: HP: {self.player.get_hit_points():.2f}/{self.player.max_hit_points} | "
+                      f"Power: {self.player.attributes['power']} | "
+                      f"Magic: {self.player.attributes['magic']} | "
+                      f"Clarity: {self.player.attributes['clarity']} | "
+                      f"XP: {self.player.attributes['experience']} | "
+                      f"Level: {self.player.attributes['level']} | "
+                      f"Armor: {self.player.armor or 'None'} | "
+                      f"Weapon: {self.player.weapon.weapon_type if self.player.weapon else 'None'}")
                 print("\nUse WASD to move, O to open chests, Q to save and quit")
             if not self.update():
                 break

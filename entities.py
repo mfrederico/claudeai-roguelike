@@ -50,6 +50,8 @@ class Player(Entity):
         self.fov_radius = config.PLAYER_FOV_RADIUS
         self.max_hit_points = config.PLAYER_STARTING_HP
         self.xp_to_next_level = config.LEVEL_UP_BASE
+        self.armor = None
+        self.weapon = None
 
     def is_visible(self, x, y):
         distance = math.sqrt((x - self.x)**2 + (y - self.y)**2)
@@ -102,6 +104,21 @@ class Player(Entity):
         actual_damage = damage * (1 - reduction)
         self.set_hit_points(self.get_hit_points() - actual_damage)
         return actual_damage
+
+    def equip_weapon(self, weapon):
+        old_weapon = self.weapon
+        self.weapon = weapon
+        return f"Equipped {weapon.weapon_type}." + (f" Unequipped {old_weapon.weapon_type}." if old_weapon else "")
+
+    def attack(self, target):
+        base_damage = random.randint(1, self.attributes['power'])
+        if self.weapon:
+            if self.weapon.bonus == 'instant':
+                return float('inf')  # Instant kill
+            bonus_damage = base_damage * self.weapon.bonus
+            return base_damage + bonus_damage
+        return base_damage
+
 
 class Monster(Entity):
     def __init__(self, x, y):

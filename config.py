@@ -1,5 +1,15 @@
 import os
 
+# Weapon types and their attack bonuses
+WEAPON_TYPES = {
+    'Dagger': 0.10,
+    'Club': 0.20,
+    'Sword': 0.35,
+    'Axe': 0.40,
+    'Mace': 0.55,
+    'Twig': 'instant'  # Special case for instant death
+}
+
 # Armor types and their protection values
 ARMOR_TYPES = {
     'Cloth': 0.10,
