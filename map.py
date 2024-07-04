@@ -35,14 +35,15 @@ class GameMap:
             self.save_map(tiles)
             return tiles
 
-
     def generate_map(self):
-        # Define noise parameters
-        elevation_scale = 0.1
-        moisture_scale = 0.1
-        rivers_scale = 0.05
-        lakes_scale = 0.08
-        octaves = 6
+        # Adjust scales based on map size
+        base_scale = min(self.width, self.height) / 100  # Base scale factor
+        elevation_scale = base_scale * 2
+        moisture_scale = base_scale * 2
+        rivers_scale = base_scale * 4
+        lakes_scale = base_scale * 3
+
+        octaves = min(6, max(2, int(base_scale * 3)))  # Adjust octaves based on map size
         persistence = 0.5
         lacunarity = 2.0
         seed = random.randint(0, 100000)
@@ -51,16 +52,16 @@ class GameMap:
         for y in range(self.height):
             row = []
             for x in range(self.width):
-                nx = x / self.width - 0.5
-                ny = y / self.height - 0.5
+                nx = x / self.width
+                ny = y / self.height
 
                 elevation = noise.pnoise2(nx * elevation_scale,
                                           ny * elevation_scale,
                                           octaves=octaves,
                                           persistence=persistence,
                                           lacunarity=lacunarity,
-                                          repeatx=1024,
-                                          repeaty=1024,
+                                          repeatx=1,
+                                          repeaty=1,
                                           base=seed)
                 
                 moisture = noise.pnoise2(nx * moisture_scale + 5.2,
@@ -68,26 +69,26 @@ class GameMap:
                                          octaves=octaves,
                                          persistence=persistence,
                                          lacunarity=lacunarity,
-                                         repeatx=1024,
-                                         repeaty=1024,
+                                         repeatx=1,
+                                         repeaty=1,
                                          base=seed + 1)
 
                 rivers = noise.pnoise2(nx * rivers_scale + 10.5,
                                        ny * rivers_scale + 3.7,
-                                       octaves=3,
-                                       persistence=0.5,
-                                       lacunarity=2.0,
-                                       repeatx=1024,
-                                       repeaty=1024,
+                                       octaves=max(2, octaves - 2),
+                                       persistence=persistence,
+                                       lacunarity=lacunarity,
+                                       repeatx=1,
+                                       repeaty=1,
                                        base=seed + 2)
 
                 lakes = noise.pnoise2(nx * lakes_scale + 15.7,
                                       ny * lakes_scale + 8.3,
-                                      octaves=4,
-                                      persistence=0.5,
-                                      lacunarity=2.0,
-                                      repeatx=1024,
-                                      repeaty=1024,
+                                      octaves=max(2, octaves - 1),
+                                      persistence=persistence,
+                                      lacunarity=lacunarity,
+                                      repeatx=1,
+                                      repeaty=1,
                                       base=seed + 3)
 
                 terrain = self.get_terrain_type(elevation, moisture, rivers, lakes)
@@ -97,23 +98,23 @@ class GameMap:
         return tiles
 
     def get_terrain_type(self, elevation, moisture, rivers, lakes):
-        if elevation < -0.05:
+        if elevation < -0.3:
             return 'Ocean'
-        elif rivers > 0.3 or lakes > 0.6:
+        elif rivers > 0.2 or lakes > 0.3:
             return 'Water'
-        elif elevation < 0.05:
+        elif elevation < -0.1:
             if moisture > 0:
                 return 'Swamp'
             else:
                 return 'Grass'
-        elif elevation < 0.3:
+        elif elevation < 0.2:
             if moisture < -0.2:
                 return 'Grass'
             elif moisture < 0.2:
                 return 'Forest'
             else:
                 return 'Swamp'
-        elif elevation < 0.7:
+        elif elevation < 0.5:
             if moisture < 0:
                 return 'Grass'
             else:
