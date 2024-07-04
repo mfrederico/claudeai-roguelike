@@ -54,8 +54,9 @@ class Combat:
 
     def monster_attack(self):
         damage = random.randint(1, self.monster.attributes['power'])
-        self.player.attributes['hit_points'] -= damage
-        return f"The {self.monster.name} deals {damage} damage to you!"
+        actual_damage = self.player.take_damage(damage)
+        armor_message = f" Your {self.player.armor} armor absorbed {damage - actual_damage:.2f} damage!" if self.player.armor else ""
+        return f"The {self.monster.name} deals {actual_damage:.2f} damage to you!{armor_message}"
 
     def run(self):
         escape_chance = random.random()
