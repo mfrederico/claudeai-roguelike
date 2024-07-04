@@ -1,5 +1,15 @@
 import os
 
+# Armor types and their protection values
+ARMOR_TYPES = {
+    'Cloth': 0.10,
+    'Leather': 0.20,
+    'Scale': 0.30,
+    'Chain': 0.50,
+    'Plate': 0.80,
+    'Carbon-Fiber': 1.00
+}
+
 # Asset paths
 ASSETS_FOLDER = "assets"
 MAP_FILE = os.path.join(ASSETS_FOLDER, "game_map.json")

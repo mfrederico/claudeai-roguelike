@@ -49,6 +49,7 @@ class Player(Entity):
         self.fov_radius = config.PLAYER_FOV_RADIUS
         self.max_hit_points = config.PLAYER_STARTING_HP
         self.xp_to_next_level = config.LEVEL_UP_BASE
+        self.armor = None
 
     def is_visible(self, x, y):
         distance = math.sqrt((x - self.x)**2 + (y - self.y)**2)
@@ -79,6 +80,23 @@ class Player(Entity):
         self.xp_to_next_level = int(self.xp_to_next_level * config.LEVEL_UP_FACTOR)
         self.full_heal()
         return True
+
+    def equip_armor(self, armor_type):
+        if armor_type in config.ARMOR_TYPES:
+            self.armor = armor_type
+            return f"Equipped {armor_type} armor."
+        return "Invalid armor type."
+
+    def get_damage_reduction(self):
+        if self.armor:
+            return config.ARMOR_TYPES[self.armor]
+        return 0
+
+    def take_damage(self, damage):
+        reduction = self.get_damage_reduction()
+        actual_damage = damage * (1 - reduction)
+        self.set_hit_points(self.get_hit_points() - actual_damage)
+        return actual_damage
 
 class Monster(Entity):
     def __init__(self, x, y):

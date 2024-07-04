@@ -26,6 +26,12 @@ class Combat:
         print("=" * 80)
         print("\nActions: [A]ttack, [D]efend, [R]un")
 
+    def monster_attack(self):
+        damage = random.randint(1, self.monster.attributes['power'])
+        actual_damage = self.player.take_damage(damage)
+        armor_message = f" Your {self.player.armor} armor absorbed {damage - actual_damage:.2f} damage!" if self.player.armor else ""
+        return f"The {self.monster.name} deals {actual_damage:.2f} damage to you!{armor_message}"
+
     def get_entity_stats(self, entity):
         stats = [
             f"Name: {entity.name}",
