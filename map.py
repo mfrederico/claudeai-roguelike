@@ -5,15 +5,15 @@ import noise
 import config
 
 TERRAIN_TYPES = {
-    'Rocky Terrain': {'char': '#', 'color': '\033[90m', 'passable': False, 'weight': config.TERRAIN_WEIGHTS['Rocky Terrain']},
-    'Cobblestone': {'char': '·', 'color': '\033[1;33m', 'passable': True, 'weight': config.TERRAIN_WEIGHTS['Cobblestone']},
-    'Swamp': {'char': '~', 'color': '\033[95m', 'passable': True, 'movement_cost': 2, 'weight': config.TERRAIN_WEIGHTS['Swamp']},
-    'Grass': {'char': '"', 'color': '\033[92m', 'passable': True, 'weight': config.TERRAIN_WEIGHTS['Grass']},
-    'Forest': {'char': '♣', 'color': '\033[32m', 'passable': True, 'fov_reduction': 2, 'weight': config.TERRAIN_WEIGHTS['Forest']},
-    'Water': {'char': '≈', 'color': '\033[94m', 'passable': False, 'weight': config.TERRAIN_WEIGHTS['Water']},
-    'Ocean': {'char': '▓', 'color': '\033[34m', 'passable': False, 'weight': config.TERRAIN_WEIGHTS['Ocean']},
-    'Town': {'char': config.TOWN_CHAR, 'color': config.TOWN_COLOR, 'passable': True, 'weight': 0},
-    'Town Entrance': {'char': config.TOWN_ENTRANCE_CHAR, 'color': config.TOWN_ENTRANCE_COLOR, 'passable': True, 'weight': 0},
+    'Rocky Terrain': {'char': '#', 'color': '\033[90m', 'passable': False},
+    'Cobblestone': {'char': '·', 'color': '\033[1;33m', 'passable': True},
+    'Swamp': {'char': '~', 'color': '\033[95m', 'passable': True, 'movement_cost': 2},
+    'Grass': {'char': '"', 'color': '\033[92m', 'passable': True},
+    'Forest': {'char': '♣', 'color': '\033[32m', 'passable': True, 'fov_reduction': 2},
+    'Water': {'char': '≈', 'color': '\033[94m', 'passable': False},
+    'Ocean': {'char': '▓', 'color': '\033[34m', 'passable': False},
+    'Town': {'char': config.TOWN_CHAR, 'color': config.TOWN_COLOR, 'passable': True},
+    'Town Entrance': {'char': config.TOWN_ENTRANCE_CHAR, 'color': config.TOWN_ENTRANCE_COLOR, 'passable': True},
 }
 
 class GameMap:
@@ -35,9 +35,13 @@ class GameMap:
             self.save_map(tiles)
             return tiles
 
+
     def generate_map(self):
         # Define noise parameters
-        scale = 0.1
+        elevation_scale = 0.1
+        moisture_scale = 0.1
+        rivers_scale = 0.05
+        lakes_scale = 0.08
         octaves = 6
         persistence = 0.5
         lacunarity = 2.0
@@ -49,17 +53,18 @@ class GameMap:
             for x in range(self.width):
                 nx = x / self.width - 0.5
                 ny = y / self.height - 0.5
-                elevation = noise.pnoise2(nx * scale,
-                                          ny * scale,
+
+                elevation = noise.pnoise2(nx * elevation_scale,
+                                          ny * elevation_scale,
                                           octaves=octaves,
                                           persistence=persistence,
                                           lacunarity=lacunarity,
                                           repeatx=1024,
                                           repeaty=1024,
                                           base=seed)
-
-                moisture = noise.pnoise2(nx * scale + 5.2,
-                                         ny * scale + 1.3,
+                
+                moisture = noise.pnoise2(nx * moisture_scale + 5.2,
+                                         ny * moisture_scale + 1.3,
                                          octaves=octaves,
                                          persistence=persistence,
                                          lacunarity=lacunarity,
@@ -67,31 +72,60 @@ class GameMap:
                                          repeaty=1024,
                                          base=seed + 1)
 
-                terrain = self.get_terrain_type(elevation, moisture)
+                rivers = noise.pnoise2(nx * rivers_scale + 10.5,
+                                       ny * rivers_scale + 3.7,
+                                       octaves=3,
+                                       persistence=0.5,
+                                       lacunarity=2.0,
+                                       repeatx=1024,
+                                       repeaty=1024,
+                                       base=seed + 2)
+
+                lakes = noise.pnoise2(nx * lakes_scale + 15.7,
+                                      ny * lakes_scale + 8.3,
+                                      octaves=4,
+                                      persistence=0.5,
+                                      lacunarity=2.0,
+                                      repeatx=1024,
+                                      repeaty=1024,
+                                      base=seed + 3)
+
+                terrain = self.get_terrain_type(elevation, moisture, rivers, lakes)
                 row.append(terrain)
             tiles.append(row)
 
         return tiles
 
-    def get_terrain_type(self, elevation, moisture):
+    def get_terrain_type(self, elevation, moisture, rivers, lakes):
         if elevation < -0.05:
             return 'Ocean'
-        elif elevation < 0:
+        elif rivers > 0.3 or lakes > 0.6:
             return 'Water'
-        elif elevation < 0.1:
-            if moisture < 0:
-                return 'Grass'
-            else:
+        elif elevation < 0.05:
+            if moisture > 0:
                 return 'Swamp'
-        elif elevation < 0.5:
+            else:
+                return 'Grass'
+        elif elevation < 0.3:
             if moisture < -0.2:
                 return 'Grass'
             elif moisture < 0.2:
                 return 'Forest'
             else:
                 return 'Swamp'
+        elif elevation < 0.7:
+            if moisture < 0:
+                return 'Grass'
+            else:
+                return 'Forest'
         else:
             return 'Rocky Terrain'
+
+    def is_passable(self, x, y):
+        if 0 <= x < self.width and 0 <= y < self.height:
+            return TERRAIN_TYPES[self.tiles[y][x]]['passable']
+        return False
+
 
     def save_map(self, tiles):
         with open(self.map_file, 'w') as f:
@@ -100,11 +134,6 @@ class GameMap:
     def load_map(self):
         with open(self.map_file, 'r') as f:
             return json.load(f)
-
-    def is_passable(self, x, y):
-        if 0 <= x < self.width and 0 <= y < self.height:
-            return TERRAIN_TYPES[self.tiles[y][x]]['passable']
-        return False
 
     def update_camera(self, player_x, player_y):
         self.camera_x = max(0, min(player_x - config.SCREEN_WIDTH // 2, self.width - config.SCREEN_WIDTH))
