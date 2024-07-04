@@ -21,7 +21,7 @@ def generate_towns(world_map):
         x = random.randint(0, world_map.width - config.TOWN_SIZE)
         y = random.randint(0, world_map.height - config.TOWN_SIZE)
         
-        if is_suitable_town_location(world_map, x, y):
+        if is_suitable_town_location(world_map, x, y, towns):
             town = Town(name, x, y)
             place_town_on_map(world_map, town)
             towns.append(town)
@@ -39,9 +39,25 @@ def generate_towns(world_map):
     
     return towns
 
-def is_suitable_town_location(world_map, x, y):
-    return (0 <= x < world_map.width - config.TOWN_SIZE and
-            0 <= y < world_map.height - config.TOWN_SIZE)
+def is_suitable_town_location(world_map, x, y, existing_towns):
+    # Check if the town fits within the map boundaries
+    if not (0 <= x < world_map.width - config.TOWN_SIZE and
+            0 <= y < world_map.height - config.TOWN_SIZE):
+        return False
+
+    # Check for overlap with existing towns
+    for town in existing_towns:
+        if (x < town.x + town.width and x + config.TOWN_SIZE > town.x and
+            y < town.y + town.height and y + config.TOWN_SIZE > town.y):
+            return False
+
+    # Check if the area is not in water
+    for i in range(x, x + config.TOWN_SIZE):
+        for j in range(y, y + config.TOWN_SIZE):
+            if world_map.tiles[j][i] in ['Water', 'Ocean']:
+                return False
+
+    return True
 
 def place_town_on_map(world_map, town):
     for i in range(town.width):
@@ -80,10 +96,11 @@ def generate_path_segment(world_map, x1, y1, x2, y2):
     current_x, current_y = x1, y1
     while current_x != x2 or current_y != y2:
         if 0 <= current_x < world_map.width and 0 <= current_y < world_map.height:
-            if world_map.tiles[current_y][current_x] not in ['Rocky Terrain', 'Town Entrance', 'Ocean']:
+            if world_map.tiles[current_y][current_x] not in ['Rocky Terrain', 'Town Entrance', 'Ocean', 'Water']:
                 world_map.tiles[current_y][current_x] = 'Cobblestone'
         
         if current_x != x2:
             current_x += dx
         elif current_y != y2:
             current_y += dy
+

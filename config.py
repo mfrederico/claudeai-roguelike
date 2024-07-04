@@ -18,8 +18,8 @@ TREASURE_TYPES = {
 }
 
 # Town generation
-TOWN_SIZE = 8  # Fixed size for all towns
-NUM_TOWNS = 30
+TOWN_SIZE = 3  # Fixed size for all towns
+NUM_TOWNS = 10
 TOWN_CHAR = '▣'
 TOWN_COLOR = '\033[1;36m'  # Cyan
 TOWN_ENTRANCE_CHAR = '▼'

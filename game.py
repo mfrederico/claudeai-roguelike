@@ -1,17 +1,18 @@
 from map import GameMap
-from entities import Player, Monster, Chest
+from entities import Player, Monster
 from items import Armor, Weapon
 from input_handler import InputHandler
 from message_log import MessageLog
 from combat import Combat
 from save_load import save_game, load_game
 from town import generate_towns, Town
+from chest import Chest  # Add this import
 import random
 import config
 
 class Game:
     def __init__(self):
-        self.map = GameMap(config.MAP_WIDTH, config.MAP_HEIGHT)
+        self.map = None
         self.player = None
         self.monsters = None
         self.chests = None
@@ -27,24 +28,21 @@ class Game:
         self.current_town = None
 
     def initialize_game(self):
-        loaded_player, loaded_towns = load_game()
-        if loaded_player:
+        loaded_player, loaded_map, loaded_towns = load_game()
+        if loaded_player and loaded_map and loaded_towns:
             self.player = loaded_player
+            self.map = loaded_map
             self.towns = loaded_towns
             self.message_log = MessageLog()
             self.message_log.add("Game loaded successfully!")
         else:
+            self.map = GameMap(config.MAP_WIDTH, config.MAP_HEIGHT)
             self.player = Player(config.MAP_WIDTH // 2, config.MAP_HEIGHT // 2)
             self.towns = generate_towns(self.map)
             self.message_log = MessageLog()
 
         self.monsters = self.spawn_monsters(config.NUM_MONSTERS)
         self.chests = self.spawn_chests(config.NUM_CHESTS)
-
-        # If towns were loaded, place them on the map
-        if loaded_towns:
-            for town in self.towns:
-                self.place_town_on_map(town)
 
     def place_town_on_map(self, town):
         for i in range(town.width):
@@ -159,7 +157,7 @@ class Game:
         return None
 
     def save_and_quit(self):
-        save_game(self.player, self.towns)
+        save_game(self.player, self.map, self.towns)
         self.message_log.add("Game saved. Thank you for playing!")
 
     def check_for_chest(self):
