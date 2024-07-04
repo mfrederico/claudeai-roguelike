@@ -3,7 +3,7 @@ from entities import Player, Monster, Chest
 from input_handler import InputHandler
 from message_log import MessageLog
 from combat import Combat
-from save_load import save_game, load_game, delete_save
+from save_load import save_game, load_game
 import random
 import config
 
@@ -111,8 +111,6 @@ class Game:
                     self.message_log.add("Cannot move there")
             elif action == 'open':
                 self.open_chest()
-            elif action == 'save':
-                self.save_game()
         return True
 
     def save_game(self):
@@ -265,7 +263,7 @@ class Game:
             if not self.in_combat and not self.in_chest_screen:
                 self.map.render(self.player, self.monsters, self.chests)
                 self.message_log.display()
-                print("\nUse WASD to move, O to open chests, S to save, Q to save and quit")
+                print("\nUse WASD to move, O to open chests, Q to save and quit")
             if not self.update():
                 break
 
