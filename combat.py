@@ -59,13 +59,17 @@ class Combat:
             return False, "You failed to escape!"
 
     def is_combat_over(self):
-        if self.player.attributes['hit_points'] <= 0:
-            self.player.attributes['hit_points'] = 0  # Ensure HP doesn't go negative
+        if self.player.get_hit_points() <= 0:
+            self.player.set_hit_points(0)  # Ensure HP doesn't go negative
             return True, "You have been defeated!"
-        elif self.monster.attributes['hit_points'] <= 0:
+        elif self.monster.get_hit_points() <= 0:
             xp_gain = self.monster.attributes['level'] * config.XP_GAIN_MULTIPLIER
-            self.player.attributes['experience'] += xp_gain
-            return True, f"You have defeated the {self.monster.name}! You gain {xp_gain} XP!"
+            leveled_up = self.player.gain_xp(xp_gain)
+            message = f"You have defeated the {self.monster.name}! You gain {xp_gain} XP!"
+            if leveled_up:
+                message += f"\nCongratulations! You've reached level {self.player.attributes['level']}!"
+                message += f"\nYou've been fully healed to {self.player.get_hit_points():.2f} HP!"
+            return True, message
         return False, ""
 
     def handle_combat_turn(self, action):

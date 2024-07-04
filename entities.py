@@ -48,16 +48,37 @@ class Player(Entity):
         super().__init__(x, y, '@', 'Player', config.COLOR_PLAYER)
         self.fov_radius = config.PLAYER_FOV_RADIUS
         self.max_hit_points = config.PLAYER_STARTING_HP
+        self.xp_to_next_level = config.LEVEL_UP_BASE
 
     def is_visible(self, x, y):
         distance = math.sqrt((x - self.x)**2 + (y - self.y)**2)
         return distance <= self.fov_radius
 
-    def heal(self):
-        heal_amount = self.attributes['magic'] / self.max_hit_points
-        new_hp = min(self.max_hit_points, self.get_hit_points() + heal_amount)
+    def heal(self, amount):
+        new_hp = min(self.max_hit_points, self.get_hit_points() + amount)
         self.set_hit_points(new_hp)
+        return round(amount, 2)
+
+    def full_heal(self):
+        heal_amount = self.max_hit_points - self.get_hit_points()
+        self.set_hit_points(self.max_hit_points)
         return round(heal_amount, 2)
+
+    def gain_xp(self, amount):
+        self.attributes['experience'] += amount
+        if self.attributes['experience'] >= self.xp_to_next_level:
+            return self.level_up()
+        return False
+
+    def level_up(self):
+        self.attributes['level'] += 1
+        self.max_hit_points += config.HP_INCREASE_ON_LEVEL_UP
+        self.attributes['power'] += config.POWER_INCREASE_ON_LEVEL_UP
+        self.attributes['magic'] += config.MAGIC_INCREASE_ON_LEVEL_UP
+        self.attributes['clarity'] += config.CLARITY_INCREASE_ON_LEVEL_UP
+        self.xp_to_next_level = int(self.xp_to_next_level * config.LEVEL_UP_FACTOR)
+        self.full_heal()
+        return True
 
 class Monster(Entity):
     def __init__(self, x, y):
