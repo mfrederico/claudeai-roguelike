@@ -14,15 +14,18 @@ TERRAIN_TYPES = {
 }
 
 class GameMap:
-    def __init__(self, width, height, map_file='game_map.json'):
+    def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.map_file = map_file
+        self.map_file = config.MAP_FILE
         self.tiles = self.load_or_generate_map()
         self.camera_x = 0
         self.camera_y = 0
 
     def load_or_generate_map(self):
+        if not os.path.exists(config.ASSETS_FOLDER):
+            os.makedirs(config.ASSETS_FOLDER)
+
         if os.path.exists(self.map_file):
             return self.load_map()
         else:

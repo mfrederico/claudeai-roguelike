@@ -1,3 +1,9 @@
+import os
+
+# Asset paths
+ASSETS_FOLDER = "assets"
+MAP_FILE = os.path.join(ASSETS_FOLDER, "game_map.json")
+
 # Map configuration
 MAP_WIDTH = 160
 MAP_HEIGHT = 90
