@@ -74,24 +74,26 @@ class Game:
 
     def update(self):
         if self.in_combat:
-            return self.handle_combat()
-        
-        action = self.input_handler.get_action()
-        if action == 'quit':
-            return False
-        elif action == 'restart':
-            self.initialize_game()
-            self.message_log.add("Game restarted with the same map.")
-        elif action in ['up', 'down', 'left', 'right']:
-            dx, dy = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}[action]
-            new_x, new_y = self.player.x + dx, self.player.y + dy
-            if self.map.is_passable(new_x, new_y):
-                self.player.move(dx, dy)
-                self.message_log.add(f"Player moved {action}")
-                self.update_monsters()
-                self.check_for_combat()
-            else:
-                self.message_log.add("Cannot move there")
+            combat_result = self.handle_combat()
+            if combat_result is not None:
+                return combat_result
+        else:
+            action = self.input_handler.get_action()
+            if action == 'quit':
+                return False
+            elif action == 'restart':
+                self.initialize_game()
+                self.message_log.add("Game restarted with the same map.")
+            elif action in ['up', 'down', 'left', 'right']:
+                dx, dy = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}[action]
+                new_x, new_y = self.player.x + dx, self.player.y + dy
+                if self.map.is_passable(new_x, new_y):
+                    self.player.move(dx, dy)
+                    self.message_log.add(f"Player moved {action}")
+                    self.update_monsters()
+                    self.check_for_combat()
+                else:
+                    self.message_log.add("Cannot move there")
         return True
 
     def handle_combat(self):
@@ -108,10 +110,12 @@ class Game:
             self.in_combat = False
             if "defeated" in message:
                 self.monsters.remove(self.current_combat.monster)
+                self.message_log.add(f"You defeated the {self.current_combat.monster.name}!")
+            elif "You have been defeated!" in message:
+                self.message_log.add("Game Over! You have been defeated.")
+                return False
             self.current_combat = None
-            return "defeated" not in message  # End game if player is defeated
-
-        return True
+        return None
 
     def update_monsters(self):
         for monster in self.monsters:
@@ -126,5 +130,6 @@ class Game:
             if not self.in_combat:
                 self.map.render(self.player, self.monsters)
                 self.message_log.display()
-            if not self.update():
+            update_result = self.update()
+            if update_result is False:
                 break
