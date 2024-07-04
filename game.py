@@ -51,7 +51,11 @@ class Game:
                 new_x, new_y = self.player.x + dx, self.player.y + dy
                 if self.map.is_passable(new_x, new_y):
                     self.player.move(dx, dy)
-                    self.message_log.add(f"Player moved {action}")
+                    healed_amount = self.player.heal_by_moving()
+                    move_message = f"Player moved {action}"
+                    if healed_amount > 0:
+                        move_message += f" and healed {healed_amount:.2f} HP"
+                    self.message_log.add(move_message)
                     self.update_monsters()
                     self.check_for_combat()
                     self.check_for_chest()

@@ -56,10 +56,15 @@ class Player(Entity):
         distance = math.sqrt((x - self.x)**2 + (y - self.y)**2)
         return distance <= self.fov_radius
 
+    def heal_by_moving(self):
+        heal_amount = self.attributes['magic'] / self.max_hit_points
+        return self.heal(heal_amount)
+
     def heal(self, amount):
-        new_hp = min(self.max_hit_points, self.get_hit_points() + amount)
+        old_hp = self.get_hit_points()
+        new_hp = min(self.max_hit_points, old_hp + amount)
         self.set_hit_points(new_hp)
-        return round(amount, 2)
+        return round(new_hp - old_hp, 2)
 
     def full_heal(self):
         heal_amount = self.max_hit_points - self.get_hit_points()
