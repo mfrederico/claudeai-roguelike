@@ -31,6 +31,8 @@ class InputHandler:
             return {'w': 'up', 'a': 'left', 's': 'down', 'd': 'right'}[key]
         elif key == 'o':
             return 'open'
+        elif key == 's':
+            return 'save'
         return None
 
     def get_combat_action(self):

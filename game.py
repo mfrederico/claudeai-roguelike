@@ -3,9 +3,9 @@ from entities import Player, Monster, Chest
 from input_handler import InputHandler
 from message_log import MessageLog
 from combat import Combat
+from save_load import save_game, load_game, delete_save
 import random
 import config
-import time
 
 class Game:
     def __init__(self):
@@ -22,10 +22,17 @@ class Game:
         self.current_chest = None
 
     def initialize_game(self):
-        self.player = Player(config.MAP_WIDTH // 2, config.MAP_HEIGHT // 2)
+        loaded_player = load_game()
+        if loaded_player:
+            self.player = loaded_player
+            self.message_log = MessageLog()
+            self.message_log.add("Game loaded successfully!")
+        else:
+            self.player = Player(config.MAP_WIDTH // 2, config.MAP_HEIGHT // 2)
+            self.message_log = MessageLog()
+
         self.monsters = self.spawn_monsters(config.NUM_MONSTERS)
         self.chests = self.spawn_chests(config.NUM_CHESTS)
-        self.message_log = MessageLog()
 
     def spawn_chests(self, num_chests):
         chests = []
@@ -82,6 +89,7 @@ class Game:
         else:
             action = self.input_handler.get_action()
             if action == 'quit':
+                self.save_and_quit()
                 return False
             elif action == 'restart':
                 self.initialize_game()
@@ -103,7 +111,17 @@ class Game:
                     self.message_log.add("Cannot move there")
             elif action == 'open':
                 self.open_chest()
+            elif action == 'save':
+                self.save_game()
         return True
+
+    def save_game(self):
+        save_game(self.player)
+        self.message_log.add("Game saved successfully!")
+
+    def save_and_quit(self):
+        self.save_game()
+        self.message_log.add("Game saved. Thank you for playing!")
 
     def check_for_chest(self):
         for chest in self.chests:
@@ -247,7 +265,7 @@ class Game:
             if not self.in_combat and not self.in_chest_screen:
                 self.map.render(self.player, self.monsters, self.chests)
                 self.message_log.display()
-                print("\nUse WASD to move, O to open chests, Q to quit")
+                print("\nUse WASD to move, O to open chests, S to save, Q to save and quit")
             if not self.update():
                 break
 
