@@ -10,6 +10,9 @@ class Item:
     def use(self, entity):
         pass
 
+    def get_description(self):
+        return f"{self.name}"
+
 class Armor(Item):
     def __init__(self, armor_type):
         super().__init__(armor_type, 'A', config.COLOR_PLAYER)
@@ -20,6 +23,9 @@ class Armor(Item):
         if hasattr(entity, 'equip_armor'):
             return entity.equip_armor(self.armor_type)
         return f"{entity.name} can't equip armor."
+
+    def get_description(self):
+        return f"{self.armor_type} Armor (Protection: {self.protection * 100:.0f}%)"
 
 def generate_random_item():
     item_type = random.choices(list(config.TREASURE_TYPES.keys()), 

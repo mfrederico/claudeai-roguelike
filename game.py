@@ -5,6 +5,7 @@ from message_log import MessageLog
 from combat import Combat
 import random
 import config
+import time
 
 class Game:
     def __init__(self):
@@ -16,7 +17,9 @@ class Game:
         self.input_handler = InputHandler()
         self.initialize_game()
         self.in_combat = False
+        self.in_chest_screen = False
         self.current_combat = None
+        self.current_chest = None
 
     def initialize_game(self):
         self.player = Player(config.MAP_WIDTH // 2, config.MAP_HEIGHT // 2)
@@ -34,11 +37,48 @@ class Game:
                     break
         return chests
 
+    def open_chest(self):
+        for chest in self.chests:
+            if chest.x == self.player.x and chest.y == self.player.y:
+                self.display_chest_screen(chest)
+                return
+        self.message_log.add("There's no chest here to open.")
+
+    def display_chest_screen(self, chest):
+        print('\033[H\033[J', end='')  # Clear screen
+        print("=" * 40)
+        print("You've found a treasure chest!")
+        print("=" * 40)
+        time.sleep(5) 
+        if chest.item:
+            print(f"\nInside, you find: {chest.item.get_description()}")
+            print(f"\nYour current armor: {self.player.armor or 'None'}")
+            print("\nDo you want to equip this armor?")
+            print("Press 'Y' to equip, or any other key to leave it.")
+            
+            action = self.input_handler.get_key().lower()
+            if action == 'y':
+                result = chest.item.use(self.player)
+                self.message_log.add(result)
+            else:
+                self.message_log.add("You decide to leave the armor.")
+        else:
+            print("\nThe chest is empty.")
+        
+        self.chests.remove(chest)
+        print("\nPress any key to continue...")
+        self.input_handler.get_key()
+
+
     def update(self):
         if self.in_combat:
             combat_result = self.handle_combat()
             if combat_result is not None:
                 return combat_result
+        elif self.in_chest_screen:
+            chest_result = self.handle_chest()
+            if chest_result is not None:
+                return chest_result
         else:
             action = self.input_handler.get_action()
             if action == 'quit':
@@ -73,11 +113,45 @@ class Game:
     def open_chest(self):
         for chest in self.chests:
             if chest.x == self.player.x and chest.y == self.player.y:
-                result = chest.open(self.player)
-                self.message_log.add(result)
-                self.chests.remove(chest)
+                self.current_chest = chest
+                self.in_chest_screen = True
                 return
         self.message_log.add("There's no chest here to open.")
+
+    def handle_chest(self):
+        if not self.current_chest:
+            self.in_chest_screen = False
+            return None
+
+        print('\033[H\033[J', end='')  # Clear screen
+        print("=" * 40)
+        print("You've found a treasure chest!")
+        print("=" * 40)
+
+        time.sleep(5) 
+
+        if self.current_chest.item:
+            print(f"\nInside, you find: {self.current_chest.item.get_description()}")
+            print(f"\nYour current armor: {self.player.armor or 'None'}")
+            print("\nDo you want to equip this armor?")
+            print("Press 'Y' to equip, or any other key to leave it.")
+
+            action = self.input_handler.get_key().lower()
+            if action == 'y':
+                result = self.current_chest.item.use(self.player)
+                self.message_log.add(result)
+            else:
+                self.message_log.add("You decide to leave the armor.")
+        else:
+            print("\nThe chest is empty.")
+
+        self.chests.remove(self.current_chest)
+        print("\nPress any key to continue...")
+        self.input_handler.get_key()
+
+        self.in_chest_screen = False
+        self.current_chest = None
+        return None
 
     def spawn_monsters(self, num_monsters):
         monsters = []
@@ -172,7 +246,7 @@ class Game:
 
     def run(self):
         while True:
-            if not self.in_combat:
+            if not self.in_combat and not self.in_chest_screen:
                 self.map.render(self.player, self.monsters, self.chests)
                 self.message_log.display()
                 print("\nUse WASD to move, O to open chests, Q to quit")

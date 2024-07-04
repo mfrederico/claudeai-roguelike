@@ -13,7 +13,7 @@ ARMOR_TYPES = {
 # Chest configuration
 CHEST_CHAR = '▣'
 CHEST_COLOR = '\033[1;33m'  # Bright yellow
-NUM_CHESTS = 10  # Number of chests to spawn on the map
+NUM_CHESTS = 100  # Number of chests to spawn on the map
 
 # Treasure probabilities (can be expanded later)
 TREASURE_TYPES = {
