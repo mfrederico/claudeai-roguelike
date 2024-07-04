@@ -1,4 +1,5 @@
 import os
+import config
 
 if os.name == 'nt':
     import msvcrt
@@ -25,6 +26,14 @@ class InputHandler:
         key = self.get_key()
         if key == 'q':
             return 'quit'
+        elif key == 'r':
+            return 'restart'
         elif key in ['w', 'a', 's', 'd']:
             return {'w': 'up', 'a': 'left', 's': 'down', 'd': 'right'}[key]
         return None
+
+    def get_combat_action(self):
+        while True:
+            key = self.get_key()
+            if key in ['a', 'd', 'r']:
+                return key

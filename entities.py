@@ -1,7 +1,9 @@
 import math
+import random
+import config
 
 class Entity:
-    def __init__(self, x, y, char, name, color='\033[0m'):
+    def __init__(self, x, y, char, name, color=config.COLOR_RESET):
         self.x = x
         self.y = y
         self.char = char
@@ -16,10 +18,10 @@ class Entity:
             'bag': []
         }
         self.attributes = {
-            'power': 20,
-            'magic': 20,
-            'clarity': 20,
-            'hit_points': 100,
+            'power': config.PLAYER_STARTING_POWER,
+            'magic': config.PLAYER_STARTING_MAGIC,
+            'clarity': config.PLAYER_STARTING_CLARITY,
+            'hit_points': config.PLAYER_STARTING_HP,
             'experience': 0,
             'level': 1
         }
@@ -37,8 +39,8 @@ class Entity:
 
 class Player(Entity):
     def __init__(self, x, y):
-        super().__init__(x, y, '@', 'Player', '\033[1;33m')
-        self.fov_radius = 5
+        super().__init__(x, y, '@', 'Player', config.COLOR_PLAYER)
+        self.fov_radius = config.PLAYER_FOV_RADIUS
 
     def is_visible(self, x, y):
         distance = math.sqrt((x - self.x)**2 + (y - self.y)**2)
@@ -46,4 +48,15 @@ class Player(Entity):
 
 class Monster(Entity):
     def __init__(self, x, y):
-        super().__init__(x, y, 'M', 'Monster', '\033[1;31m')
+        monster_type = random.choice(['Goblin', 'Orc', 'Troll', 'Skeleton'])
+        char = monster_type[0].upper()
+        super().__init__(x, y, char, monster_type, config.COLOR_MONSTER)
+        self.adjust_attributes()
+
+    def adjust_attributes(self):
+        level_adjustment = random.randint(-2, 2)
+        self.attributes['level'] += level_adjustment
+        self.attributes['hit_points'] = max(1, config.MONSTER_BASE_HP + level_adjustment * 10)
+        self.attributes['power'] = max(1, config.MONSTER_BASE_POWER + level_adjustment * 2)
+        self.attributes['magic'] = max(1, config.MONSTER_BASE_MAGIC + level_adjustment * 2)
+        self.attributes['clarity'] = max(1, config.MONSTER_BASE_CLARITY + level_adjustment * 2)

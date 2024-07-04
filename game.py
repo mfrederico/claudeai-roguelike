@@ -2,30 +2,86 @@ from map import GameMap
 from entities import Player, Monster
 from input_handler import InputHandler
 from message_log import MessageLog
+from combat import Combat
 import random
+import config
 
 class Game:
     def __init__(self):
-        self.map = GameMap(160, 90)
-        self.player = Player(self.map.width // 2, self.map.height // 2)
-        self.monsters = self.spawn_monsters(5)
-        self.message_log = MessageLog()
+        self.map = GameMap(config.MAP_WIDTH, config.MAP_HEIGHT)
+        self.player = None
+        self.monsters = None
+        self.message_log = None
         self.input_handler = InputHandler()
+        self.initialize_game()
+        self.in_combat = False
+        self.current_combat = None
+
+    def initialize_game(self):
+        self.player = Player(config.MAP_WIDTH // 2, config.MAP_HEIGHT // 2)
+        self.monsters = self.spawn_monsters(config.NUM_MONSTERS)
+        self.message_log = MessageLog()
 
     def spawn_monsters(self, num_monsters):
         monsters = []
-        for _ in range(num_monsters):
-            while True:
-                x, y = random.randint(0, self.map.width - 1), random.randint(0, self.map.height - 1)
-                if self.map.is_passable(x, y):
-                    monsters.append(Monster(x, y))
-                    break
+        regions = self.divide_map_into_regions(config.REGION_DIVISIONS_X, config.REGION_DIVISIONS_Y)
+        monsters_per_region = num_monsters // len(regions)
+        
+        for region in regions:
+            for _ in range(monsters_per_region):
+                monster = self.spawn_monster_in_region(region)
+                if monster:
+                    monsters.append(monster)
+        
+        # Spawn any remaining monsters randomly
+        while len(monsters) < num_monsters:
+            x, y = random.randint(0, self.map.width - 1), random.randint(0, self.map.height - 1)
+            if self.map.is_passable(x, y) and not any(m.x == x and m.y == y for m in monsters):
+                monsters.append(Monster(x, y))
+        
         return monsters
 
+    def divide_map_into_regions(self, num_x, num_y):
+        regions = []
+        region_width = self.map.width // num_x
+        region_height = self.map.height // num_y
+        
+        for i in range(num_x):
+            for j in range(num_y):
+                x1 = i * region_width
+                y1 = j * region_height
+                x2 = min((i + 1) * region_width - 1, self.map.width - 1)
+                y2 = min((j + 1) * region_height - 1, self.map.height - 1)
+                regions.append((x1, y1, x2, y2))
+        
+        return regions
+
+    def spawn_monster_in_region(self, region):
+        x1, y1, x2, y2 = region
+        for _ in range(config.MAX_SPAWN_ATTEMPTS):
+            x = random.randint(x1, x2)
+            y = random.randint(y1, y2)
+            if self.map.is_passable(x, y):
+                return Monster(x, y)
+        return None
+
+    def check_for_combat(self):
+        for monster in self.monsters:
+            if monster.x == self.player.x and monster.y == self.player.y:
+                self.in_combat = True
+                self.current_combat = Combat(self.player, monster)
+                return
+
     def update(self):
+        if self.in_combat:
+            return self.handle_combat()
+        
         action = self.input_handler.get_action()
         if action == 'quit':
             return False
+        elif action == 'restart':
+            self.initialize_game()
+            self.message_log.add("Game restarted with the same map.")
         elif action in ['up', 'down', 'left', 'right']:
             dx, dy = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}[action]
             new_x, new_y = self.player.x + dx, self.player.y + dy
@@ -33,21 +89,42 @@ class Game:
                 self.player.move(dx, dy)
                 self.message_log.add(f"Player moved {action}")
                 self.update_monsters()
+                self.check_for_combat()
             else:
                 self.message_log.add("Cannot move there")
         return True
 
+    def handle_combat(self):
+        self.current_combat.render_combat_screen()
+        action = self.input_handler.get_combat_action()
+        result = self.current_combat.handle_combat_turn(action)
+        print(result)
+        input("Press Enter to continue...")
+
+        combat_over, message = self.current_combat.is_combat_over()
+        if combat_over:
+            print(message)
+            input("Press Enter to continue...")
+            self.in_combat = False
+            if "defeated" in message:
+                self.monsters.remove(self.current_combat.monster)
+            self.current_combat = None
+            return "defeated" not in message  # End game if player is defeated
+
+        return True
+
     def update_monsters(self):
         for monster in self.monsters:
-            dx, dy = random.choice([(0, 1), (1, 0), (0, -1), (-1, 0)])
-            new_x, new_y = monster.x + dx, monster.y + dy
-            if self.map.is_passable(new_x, new_y):
-                monster.move(dx, dy)
+            if random.random() < config.MONSTER_MOVE_CHANCE:
+                dx, dy = random.choice([(0, 1), (1, 0), (0, -1), (-1, 0)])
+                new_x, new_y = monster.x + dx, monster.y + dy
+                if self.map.is_passable(new_x, new_y):
+                    monster.move(dx, dy)
 
     def run(self):
         while True:
-            self.map.render(self.player, self.monsters)
-            self.message_log.display()
+            if not self.in_combat:
+                self.map.render(self.player, self.monsters)
+                self.message_log.display()
             if not self.update():
                 break
-

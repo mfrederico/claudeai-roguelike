@@ -1,25 +1,34 @@
 import random
-
-SCREEN_WIDTH = 80
-SCREEN_HEIGHT = 24
+import json
+import os
+import config
 
 TERRAIN_TYPES = {
-    'Rocky Terrain': {'char': '#', 'color': '\033[90m', 'passable': False, 'weight': 5},
-    'Cobblestone': {'char': '.', 'color': '\033[93m', 'passable': True, 'weight': 20},
-    'Swamp': {'char': '~', 'color': '\033[95m', 'passable': True, 'movement_cost': 2, 'weight': 10},
-    'Grass': {'char': '"', 'color': '\033[92m', 'passable': True, 'weight': 40},
-    'Forest': {'char': '♣', 'color': '\033[32m', 'passable': True, 'fov_reduction': 2, 'weight': 20},
-    'Water': {'char': '≈', 'color': '\033[94m', 'passable': False, 'weight': 5},
-    'Ocean': {'char': '▓', 'color': '\033[34m', 'passable': False, 'weight': 0},
+    'Rocky Terrain': {'char': '#', 'color': '\033[90m', 'passable': False, 'weight': config.TERRAIN_WEIGHTS['Rocky Terrain']},
+    'Cobblestone': {'char': '.', 'color': '\033[93m', 'passable': True, 'weight': config.TERRAIN_WEIGHTS['Cobblestone']},
+    'Swamp': {'char': '~', 'color': '\033[95m', 'passable': True, 'movement_cost': 2, 'weight': config.TERRAIN_WEIGHTS['Swamp']},
+    'Grass': {'char': '"', 'color': '\033[92m', 'passable': True, 'weight': config.TERRAIN_WEIGHTS['Grass']},
+    'Forest': {'char': '♣', 'color': '\033[32m', 'passable': True, 'fov_reduction': 2, 'weight': config.TERRAIN_WEIGHTS['Forest']},
+    'Water': {'char': '≈', 'color': '\033[94m', 'passable': False, 'weight': config.TERRAIN_WEIGHTS['Water']},
+    'Ocean': {'char': '▓', 'color': '\033[34m', 'passable': False, 'weight': config.TERRAIN_WEIGHTS['Ocean']},
 }
 
 class GameMap:
-    def __init__(self, width, height):
+    def __init__(self, width, height, map_file='game_map.json'):
         self.width = width
         self.height = height
-        self.tiles = self.generate_map()
+        self.map_file = map_file
+        self.tiles = self.load_or_generate_map()
         self.camera_x = 0
         self.camera_y = 0
+
+    def load_or_generate_map(self):
+        if os.path.exists(self.map_file):
+            return self.load_map()
+        else:
+            tiles = self.generate_map()
+            self.save_map(tiles)
+            return tiles
 
     def generate_map(self):
         tiles = []
@@ -37,21 +46,29 @@ class GameMap:
             tiles.append(row)
         return tiles
 
+    def save_map(self, tiles):
+        with open(self.map_file, 'w') as f:
+            json.dump(tiles, f)
+
+    def load_map(self):
+        with open(self.map_file, 'r') as f:
+            return json.load(f)
+
     def is_passable(self, x, y):
         if 0 <= x < self.width and 0 <= y < self.height:
             return TERRAIN_TYPES[self.tiles[y][x]]['passable']
         return False
 
     def update_camera(self, player_x, player_y):
-        self.camera_x = max(0, min(player_x - SCREEN_WIDTH // 2, self.width - SCREEN_WIDTH))
-        self.camera_y = max(0, min(player_y - SCREEN_HEIGHT // 2, self.height - SCREEN_HEIGHT))
+        self.camera_x = max(0, min(player_x - config.SCREEN_WIDTH // 2, self.width - config.SCREEN_WIDTH))
+        self.camera_y = max(0, min(player_y - config.SCREEN_HEIGHT // 2, self.height - config.SCREEN_HEIGHT))
 
     def render(self, player, monsters):
         print('\033[H\033[J', end='')  # Clear screen
         self.update_camera(player.x, player.y)
 
-        for y in range(SCREEN_HEIGHT):
-            for x in range(SCREEN_WIDTH):
+        for y in range(config.SCREEN_HEIGHT):
+            for x in range(config.SCREEN_WIDTH):
                 map_x = x + self.camera_x
                 map_y = y + self.camera_y
                 
@@ -70,7 +87,7 @@ class GameMap:
                         color = player.color
 
                     if player.is_visible(map_x, map_y):
-                        print(f"{color}{char}\033[0m", end='')
+                        print(f"{color}{char}{config.COLOR_RESET}", end='')
                     else:
                         print(' ', end='')
                 else:
@@ -85,3 +102,4 @@ class GameMap:
               f"Level: {player.attributes['level']}")
 
         print("\nUse WASD to move, Q to quit")
+
