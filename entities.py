@@ -1,7 +1,7 @@
 import math
 import random
 import config
-from items import generate_random_item
+from items import generate_random_item, Armor, Weapon
 
 class Entity:
     def __init__(self, x, y, char, name, color=config.COLOR_RESET):
