@@ -66,11 +66,10 @@ class GameMap:
         self.camera_x = max(0, min(player_x - config.SCREEN_WIDTH // 2, self.width - config.SCREEN_WIDTH))
         self.camera_y = max(0, min(player_y - config.SCREEN_HEIGHT // 2, self.height - config.SCREEN_HEIGHT))
 
-    def render(self, player, monsters):
+    def render(self, player, monsters, chests):
         print('\033[H\033[J', end='')  # Clear screen
         self.update_camera(player.x, player.y)
 
-        # Render the map
         for y in range(config.SCREEN_HEIGHT):
             for x in range(config.SCREEN_WIDTH):
                 map_x = x + self.camera_x
@@ -80,6 +79,11 @@ class GameMap:
                     terrain = self.tiles[map_y][map_x]
                     char = TERRAIN_TYPES[terrain]['char']
                     color = TERRAIN_TYPES[terrain]['color']
+
+                    chest_here = next((c for c in chests if c.x == map_x and c.y == map_y), None)
+                    if chest_here:
+                        char = chest_here.char
+                        color = chest_here.color
 
                     monster_here = next((m for m in monsters if m.x == map_x and m.y == map_y), None)
                     if monster_here:
@@ -104,4 +108,5 @@ class GameMap:
               f"Magic: {player.attributes['magic']} | "
               f"Clarity: {player.attributes['clarity']} | "
               f"XP: {player.attributes['experience']} | "
-              f"Level: {player.attributes['level']}")
+              f"Level: {player.attributes['level']} | "
+              f"Armor: {player.armor or 'None'}")

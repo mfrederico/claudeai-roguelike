@@ -10,6 +10,16 @@ ARMOR_TYPES = {
     'Carbon-Fiber': 1.00
 }
 
+# Chest configuration
+CHEST_CHAR = '▣'
+CHEST_COLOR = '\033[1;33m'  # Bright yellow
+NUM_CHESTS = 10  # Number of chests to spawn on the map
+
+# Treasure probabilities (can be expanded later)
+TREASURE_TYPES = {
+    'armor': 1.0  # 100% chance of armor for now
+}
+
 # Asset paths
 ASSETS_FOLDER = "assets"
 MAP_FILE = os.path.join(ASSETS_FOLDER, "game_map.json")

@@ -1,6 +1,7 @@
 import math
 import random
 import config
+from items import generate_random_item
 
 class Entity:
     def __init__(self, x, y, char, name, color=config.COLOR_RESET):
@@ -112,3 +113,16 @@ class Monster(Entity):
         self.attributes['power'] = max(1, config.MONSTER_BASE_POWER + level_adjustment * 2)
         self.attributes['magic'] = max(1, config.MONSTER_BASE_MAGIC + level_adjustment * 2)
         self.attributes['clarity'] = max(1, config.MONSTER_BASE_CLARITY + level_adjustment * 2)
+
+
+class Chest(Entity):
+    def __init__(self, x, y):
+        super().__init__(x, y, config.CHEST_CHAR, 'Chest', config.CHEST_COLOR)
+        self.item = generate_random_item()
+
+    def open(self, player):
+        if self.item:
+            result = self.item.use(player)
+            self.item = None
+            return f"You found {self.item.name}! {result}"
+        return "The chest is empty."

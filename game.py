@@ -1,40 +1,17 @@
 from map import GameMap
-from entities import Player, Monster
+from entities import Player, Monster, Chest
 from input_handler import InputHandler
 from message_log import MessageLog
 from combat import Combat
 import random
 import config
 
-def display_gravestone():
-    gravestone = r"""
-         .---.
-        /     \
-        |  R I P  |
-        |   He    |
-        |  Died   |
-        | Playing |
-        |   RPG   |
-        =========
-          \   /
-           \ /
-           |||
-           |||
-           |||
-           |||
-         \=====/
-
-    Game Over!
-    Press any key to exit...
-    """
-    print(gravestone)
-    input()
-
 class Game:
     def __init__(self):
         self.map = GameMap(config.MAP_WIDTH, config.MAP_HEIGHT)
         self.player = None
         self.monsters = None
+        self.chests = None
         self.message_log = None
         self.input_handler = InputHandler()
         self.initialize_game()
@@ -44,7 +21,60 @@ class Game:
     def initialize_game(self):
         self.player = Player(config.MAP_WIDTH // 2, config.MAP_HEIGHT // 2)
         self.monsters = self.spawn_monsters(config.NUM_MONSTERS)
+        self.chests = self.spawn_chests(config.NUM_CHESTS)
         self.message_log = MessageLog()
+
+    def spawn_chests(self, num_chests):
+        chests = []
+        for _ in range(num_chests):
+            while True:
+                x, y = random.randint(0, self.map.width - 1), random.randint(0, self.map.height - 1)
+                if self.map.is_passable(x, y) and not any(m.x == x and m.y == y for m in self.monsters):
+                    chests.append(Chest(x, y))
+                    break
+        return chests
+
+    def update(self):
+        if self.in_combat:
+            combat_result = self.handle_combat()
+            if combat_result is not None:
+                return combat_result
+        else:
+            action = self.input_handler.get_action()
+            if action == 'quit':
+                return False
+            elif action == 'restart':
+                self.initialize_game()
+                self.message_log.add("Game restarted with the same map.")
+            elif action in ['up', 'down', 'left', 'right']:
+                dx, dy = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}[action]
+                new_x, new_y = self.player.x + dx, self.player.y + dy
+                if self.map.is_passable(new_x, new_y):
+                    self.player.move(dx, dy)
+                    healed_amount = self.player.heal()
+                    self.message_log.add(f"Player moved {action} and healed {healed_amount:.2f} HP")
+                    self.update_monsters()
+                    self.check_for_combat()
+                    self.check_for_chest()
+                else:
+                    self.message_log.add("Cannot move there")
+            elif action == 'open':
+                self.open_chest()
+        return True
+
+    def check_for_chest(self):
+        for chest in self.chests:
+            if chest.x == self.player.x and chest.y == self.player.y:
+                self.message_log.add("You see a chest here. Press 'O' to open it.")
+
+    def open_chest(self):
+        for chest in self.chests:
+            if chest.x == self.player.x and chest.y == self.player.y:
+                result = chest.open(self.player)
+                self.message_log.add(result)
+                self.chests.remove(chest)
+                return
+        self.message_log.add("There's no chest here to open.")
 
     def spawn_monsters(self, num_monsters):
         monsters = []
@@ -96,31 +126,6 @@ class Game:
                 self.current_combat = Combat(self.player, monster)
                 return
 
-    def update(self):
-        if self.in_combat:
-            combat_result = self.handle_combat()
-            if combat_result is not None:
-                return combat_result
-        else:
-            action = self.input_handler.get_action()
-            if action == 'quit':
-                return False
-            elif action == 'restart':
-                self.initialize_game()
-                self.message_log.add("Game restarted with the same map.")
-            elif action in ['up', 'down', 'left', 'right']:
-                dx, dy = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}[action]
-                new_x, new_y = self.player.x + dx, self.player.y + dy
-                if self.map.is_passable(new_x, new_y):
-                    self.player.move(dx, dy)
-                    self.message_log.add(f"Player moved {action}")
-                    self.update_monsters()
-                    self.check_for_combat()
-                else:
-                    self.message_log.add("Cannot move there")
-            elif action == 'equip':
-                self.equip_armor()
-        return True
 
     def equip_armor(self):
         print("\nAvailable armor types:")
@@ -165,8 +170,32 @@ class Game:
     def run(self):
         while True:
             if not self.in_combat:
-                self.map.render(self.player, self.monsters)
+                self.map.render(self.player, self.monsters, self.chests)
                 self.message_log.display()
-                print("\nUse WASD to move, E to equip armor, Q to quit")
+                print("\nUse WASD to move, O to open chests, Q to quit")
             if not self.update():
                 break
+
+def display_gravestone():
+    gravestone = r"""
+         .---.
+        /     \
+        |  R I P  |
+        |   He    |
+        |  Died   |
+        | Playing |
+        |   RPG   |
+        =========
+          \   /
+           \ /
+           |||
+           |||
+           |||
+           |||
+         \=====/
+
+    Game Over!
+    Press any key to exit...
+    """
+    print(gravestone)
+    input()
