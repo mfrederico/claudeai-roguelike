@@ -1,11 +1,12 @@
 import random
 import json
 import os
+import noise
 import config
 
 TERRAIN_TYPES = {
     'Rocky Terrain': {'char': '#', 'color': '\033[90m', 'passable': False, 'weight': config.TERRAIN_WEIGHTS['Rocky Terrain']},
-    'Cobblestone': {'char': '.', 'color': '\033[93m', 'passable': True, 'weight': config.TERRAIN_WEIGHTS['Cobblestone']},
+    'Cobblestone': {'char': '·', 'color': '\033[1;33m', 'passable': True, 'weight': config.TERRAIN_WEIGHTS['Cobblestone']},
     'Swamp': {'char': '~', 'color': '\033[95m', 'passable': True, 'movement_cost': 2, 'weight': config.TERRAIN_WEIGHTS['Swamp']},
     'Grass': {'char': '"', 'color': '\033[92m', 'passable': True, 'weight': config.TERRAIN_WEIGHTS['Grass']},
     'Forest': {'char': '♣', 'color': '\033[32m', 'passable': True, 'fov_reduction': 2, 'weight': config.TERRAIN_WEIGHTS['Forest']},
@@ -19,8 +20,7 @@ class GameMap:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.map_file = config.MAP_FILE
-        self.tiles = self.load_or_generate_map()
+        self.tiles = self.generate_map()
         self.camera_x = 0
         self.camera_y = 0
 
@@ -36,20 +36,62 @@ class GameMap:
             return tiles
 
     def generate_map(self):
+        # Define noise parameters
+        scale = 0.1
+        octaves = 6
+        persistence = 0.5
+        lacunarity = 2.0
+        seed = random.randint(0, 100000)
+
         tiles = []
         for y in range(self.height):
             row = []
             for x in range(self.width):
-                if x == 0 or y == 0 or x == self.width - 1 or y == self.height - 1:
-                    row.append('Ocean')
-                else:
-                    terrain = random.choices(
-                        list(TERRAIN_TYPES.keys()),
-                        weights=[t['weight'] for t in TERRAIN_TYPES.values()]
-                    )[0]
-                    row.append(terrain)
+                nx = x / self.width - 0.5
+                ny = y / self.height - 0.5
+                elevation = noise.pnoise2(nx * scale,
+                                          ny * scale,
+                                          octaves=octaves,
+                                          persistence=persistence,
+                                          lacunarity=lacunarity,
+                                          repeatx=1024,
+                                          repeaty=1024,
+                                          base=seed)
+
+                moisture = noise.pnoise2(nx * scale + 5.2,
+                                         ny * scale + 1.3,
+                                         octaves=octaves,
+                                         persistence=persistence,
+                                         lacunarity=lacunarity,
+                                         repeatx=1024,
+                                         repeaty=1024,
+                                         base=seed + 1)
+
+                terrain = self.get_terrain_type(elevation, moisture)
+                row.append(terrain)
             tiles.append(row)
+
         return tiles
+
+    def get_terrain_type(self, elevation, moisture):
+        if elevation < -0.05:
+            return 'Ocean'
+        elif elevation < 0:
+            return 'Water'
+        elif elevation < 0.1:
+            if moisture < 0:
+                return 'Grass'
+            else:
+                return 'Swamp'
+        elif elevation < 0.5:
+            if moisture < -0.2:
+                return 'Grass'
+            elif moisture < 0.2:
+                return 'Forest'
+            else:
+                return 'Swamp'
+        else:
+            return 'Rocky Terrain'
 
     def save_map(self, tiles):
         with open(self.map_file, 'w') as f:

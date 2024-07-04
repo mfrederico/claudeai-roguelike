@@ -82,15 +82,15 @@ TERRAIN_TYPES = {
     'Ocean': {'char': '▓', 'color': '\033[34m', 'passable': False, 'weight': 0},
 }
 
-# Terrain generation weights
+# Terrain weights (these are now used differently in the noise-based generation)
 TERRAIN_WEIGHTS = {
-    'Rocky Terrain': 5,
-    'Cobblestone': 20,
-    'Swamp': 10,
-    'Grass': 40,
-    'Forest': 20,
-    'Water': 5,
-    'Ocean': 0  # Ocean is only used for borders
+    'Rocky Terrain': 1,
+    'Cobblestone': 1,
+    'Swamp': .24,
+    'Grass': .24,
+    'Forest': 1,
+    'Water': 1,
+    'Ocean': 1,
 }
 
 # Weapon types and their attack bonuses
