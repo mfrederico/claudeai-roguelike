@@ -1,10 +1,11 @@
 from map import GameMap
 from entities import Player, Monster, Chest
-from items import Armor, Weapon  # Add this line
+from items import Armor, Weapon
 from input_handler import InputHandler
 from message_log import MessageLog
 from combat import Combat
 from save_load import save_game, load_game
+from town import generate_towns, Town
 import random
 import config
 
@@ -14,13 +15,16 @@ class Game:
         self.player = None
         self.monsters = None
         self.chests = None
+        self.towns = None
         self.message_log = None
         self.input_handler = InputHandler()
         self.initialize_game()
         self.in_combat = False
         self.in_chest_screen = False
+        self.in_town = False
         self.current_combat = None
         self.current_chest = None
+        self.current_town = None
 
     def initialize_game(self):
         loaded_player = load_game()
@@ -34,6 +38,7 @@ class Game:
 
         self.monsters = self.spawn_monsters(config.NUM_MONSTERS)
         self.chests = self.spawn_chests(config.NUM_CHESTS)
+        self.towns = generate_towns(self.map)
 
     def spawn_chests(self, num_chests):
         chests = []
@@ -77,7 +82,6 @@ class Game:
         print("\nPress any key to continue...")
         self.input_handler.get_key()
 
-
     def update(self):
         if self.in_combat:
             combat_result = self.handle_combat()
@@ -87,6 +91,10 @@ class Game:
             chest_result = self.handle_chest()
             if chest_result is not None:
                 return chest_result
+        elif self.in_town:
+            town_result = self.handle_town()
+            if town_result is not None:
+                return town_result
         else:
             action = self.input_handler.get_action()
             if action == 'quit':
@@ -108,11 +116,32 @@ class Game:
                     self.update_monsters()
                     self.check_for_combat()
                     self.check_for_chest()
+                    self.check_for_town_entrance()
                 else:
                     self.message_log.add("Cannot move there")
             elif action == 'open':
                 self.open_chest()
         return True
+
+    def check_for_town_entrance(self):
+        for town in self.towns:
+            if self.player.x == town.entrance_x and self.player.y == town.entrance_y:
+                self.enter_town(town)
+                break
+
+    def enter_town(self, town):
+        self.current_town = town
+        self.in_town = True
+        self.message_log.add(f"You've entered {town.name}!")
+
+    def handle_town(self):
+        # For now, just display a message and exit the town
+        print(f"Welcome to {self.current_town.name}!")
+        print("Press any key to exit the town...")
+        self.input_handler.get_key()
+        self.in_town = False
+        self.current_town = None
+        return None
 
     def save_game(self):
         save_game(self.player)
@@ -262,8 +291,16 @@ class Game:
                 if self.map.is_passable(new_x, new_y):
                     monster.move(dx, dy)
 
-
     def run(self):
+        while True:
+            if not self.in_combat and not self.in_chest_screen and not self.in_town:
+                self.map.render(self.player, self.monsters, self.chests, self.towns)
+                self.message_log.display()
+                print("\nUse WASD to move, O to open chests, Q to save and quit")
+            if not self.update():
+                break
+
+    def xrun(self):
         while True:
             if not self.in_combat and not self.in_chest_screen:
                 self.map.render(self.player, self.monsters, self.chests)

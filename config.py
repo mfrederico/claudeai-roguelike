@@ -1,24 +1,10 @@
 import os
 
-# Weapon types and their attack bonuses
-WEAPON_TYPES = {
-    'Dagger': 0.10,
-    'Club': 0.20,
-    'Sword': 0.35,
-    'Axe': 0.40,
-    'Mace': 0.55,
-    'Twig': 'instant'  # Special case for instant death
-}
+# Color codes
+COLOR_RESET = '\033[0m'
+COLOR_PLAYER = '\033[1;33m'
+COLOR_MONSTER = '\033[1;31m'
 
-# Armor types and their protection values
-ARMOR_TYPES = {
-    'Cloth': 0.10,
-    'Leather': 0.20,
-    'Scale': 0.30,
-    'Chain': 0.50,
-    'Plate': 0.80,
-    'Carbon-Fiber': 1.00
-}
 
 # Chest configuration
 CHEST_CHAR = '▣'
@@ -30,6 +16,14 @@ TREASURE_TYPES = {
     'armor': 0.5,  # 50% chance of armor
     'weapon': 0.5  # 50% chance of weapon
 }
+
+# Town generation
+TOWN_SIZE = 8  # Fixed size for all towns
+NUM_TOWNS = 30
+TOWN_CHAR = '▣'
+TOWN_COLOR = '\033[1;36m'  # Cyan
+TOWN_ENTRANCE_CHAR = '▼'
+TOWN_ENTRANCE_COLOR = '\033[1;33m'  # Yellow
 
 # Asset paths
 ASSETS_FOLDER = "assets"
@@ -75,7 +69,18 @@ MAGIC_INCREASE_ON_LEVEL_UP = 1
 CLARITY_INCREASE_ON_LEVEL_UP = 1
 
 # Field of View
-PLAYER_FOV_RADIUS = 15
+PLAYER_FOV_RADIUS = 100
+
+# Terrain types
+TERRAIN_TYPES = {
+    'Rocky Terrain': {'char': '#', 'color': '\033[90m', 'passable': False, 'weight': 5},
+    'Cobblestone': {'char': '·', 'color': '\033[1;33m', 'passable': True, 'weight': 20},  # Bright yellow
+    'Swamp': {'char': '~', 'color': '\033[95m', 'passable': True, 'movement_cost': 2, 'weight': 10},
+    'Grass': {'char': '"', 'color': '\033[92m', 'passable': True, 'weight': 40},
+    'Forest': {'char': '♣', 'color': '\033[32m', 'passable': True, 'fov_reduction': 2, 'weight': 20},
+    'Water': {'char': '≈', 'color': '\033[94m', 'passable': False, 'weight': 5},
+    'Ocean': {'char': '▓', 'color': '\033[34m', 'passable': False, 'weight': 0},
+}
 
 # Terrain generation weights
 TERRAIN_WEIGHTS = {
@@ -88,7 +93,22 @@ TERRAIN_WEIGHTS = {
     'Ocean': 0  # Ocean is only used for borders
 }
 
-# Color codes
-COLOR_RESET = '\033[0m'
-COLOR_PLAYER = '\033[1;33m'
-COLOR_MONSTER = '\033[1;31m'
+# Weapon types and their attack bonuses
+WEAPON_TYPES = {
+    'Dagger': 0.10,
+    'Club': 0.20,
+    'Sword': 0.35,
+    'Axe': 0.40,
+    'Mace': 0.55,
+    'Twig': 'instant'  # Special case for instant death
+}
+
+# Armor types and their protection values
+ARMOR_TYPES = {
+    'Cloth': 0.10,
+    'Leather': 0.20,
+    'Scale': 0.30,
+    'Chain': 0.50,
+    'Plate': 0.80,
+    'Carbon-Fiber': 1.00
+}

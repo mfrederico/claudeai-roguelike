@@ -11,6 +11,8 @@ TERRAIN_TYPES = {
     'Forest': {'char': '♣', 'color': '\033[32m', 'passable': True, 'fov_reduction': 2, 'weight': config.TERRAIN_WEIGHTS['Forest']},
     'Water': {'char': '≈', 'color': '\033[94m', 'passable': False, 'weight': config.TERRAIN_WEIGHTS['Water']},
     'Ocean': {'char': '▓', 'color': '\033[34m', 'passable': False, 'weight': config.TERRAIN_WEIGHTS['Ocean']},
+    'Town': {'char': config.TOWN_CHAR, 'color': config.TOWN_COLOR, 'passable': True, 'weight': 0},
+    'Town Entrance': {'char': config.TOWN_ENTRANCE_CHAR, 'color': config.TOWN_ENTRANCE_COLOR, 'passable': True, 'weight': 0},
 }
 
 class GameMap:
@@ -66,7 +68,7 @@ class GameMap:
         self.camera_x = max(0, min(player_x - config.SCREEN_WIDTH // 2, self.width - config.SCREEN_WIDTH))
         self.camera_y = max(0, min(player_y - config.SCREEN_HEIGHT // 2, self.height - config.SCREEN_HEIGHT))
 
-    def render(self, player, monsters, chests):
+    def render(self, player, monsters, chests, towns):
         print('\033[H\033[J', end='')  # Clear screen
         self.update_camera(player.x, player.y)
 
@@ -80,15 +82,38 @@ class GameMap:
                     char = TERRAIN_TYPES[terrain]['char']
                     color = TERRAIN_TYPES[terrain]['color']
 
-                    chest_here = next((c for c in chests if c.x == map_x and c.y == map_y), None)
-                    if chest_here:
-                        char = chest_here.char
-                        color = chest_here.color
+                    entity_here = None
+                    for town in towns:
+                        if town.x <= map_x < town.x + town.width and town.y <= map_y < town.y + town.height:
+                            entity_here = ('town', town)
+                            break
 
-                    monster_here = next((m for m in monsters if m.x == map_x and m.y == map_y), None)
-                    if monster_here:
-                        char = monster_here.char
-                        color = monster_here.color
+                    if not entity_here:
+                        entity_here = next(((
+                            'chest', c)
+                            for c in chests
+                            if c.x == map_x and c.y == map_y
+                        ), None)
+
+                    if not entity_here:
+                        entity_here = next(((
+                            'monster', m)
+                            for m in monsters
+                            if m.x == map_x and m.y == map_y
+                        ), None)
+
+                    if entity_here:
+                        entity_type, entity = entity_here
+                        if entity_type == 'town':
+                            if (map_x, map_y) == (entity.entrance_x, entity.entrance_y):
+                                char = TERRAIN_TYPES['Town Entrance']['char']
+                                color = TERRAIN_TYPES['Town Entrance']['color']
+                            else:
+                                char = TERRAIN_TYPES['Town']['char']
+                                color = TERRAIN_TYPES['Town']['color']
+                        else:
+                            char = entity.char
+                            color = entity.color
 
                     if player.x == map_x and player.y == map_y:
                         char = player.char
@@ -109,4 +134,5 @@ class GameMap:
               f"Clarity: {player.attributes['clarity']} | "
               f"XP: {player.attributes['experience']} | "
               f"Level: {player.attributes['level']} | "
-              f"Armor: {player.armor or 'None'}")
+              f"Armor: {player.armor or 'None'} | "
+              f"Weapon: {player.weapon.weapon_type if player.weapon else 'None'}")
