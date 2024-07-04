@@ -49,7 +49,7 @@ class Game:
         print("=" * 40)
         print("You've found a treasure chest!")
         print("=" * 40)
-        time.sleep(5) 
+
         if chest.item:
             print(f"\nInside, you find: {chest.item.get_description()}")
             print(f"\nYour current armor: {self.player.armor or 'None'}")
@@ -127,8 +127,6 @@ class Game:
         print("=" * 40)
         print("You've found a treasure chest!")
         print("=" * 40)
-
-        time.sleep(5) 
 
         if self.current_chest.item:
             print(f"\nInside, you find: {self.current_chest.item.get_description()}")
