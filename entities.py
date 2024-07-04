@@ -41,10 +41,15 @@ class Player(Entity):
     def __init__(self, x, y):
         super().__init__(x, y, '@', 'Player', config.COLOR_PLAYER)
         self.fov_radius = config.PLAYER_FOV_RADIUS
+        self.max_hit_points = config.PLAYER_STARTING_HP
 
     def is_visible(self, x, y):
         distance = math.sqrt((x - self.x)**2 + (y - self.y)**2)
         return distance <= self.fov_radius
+
+    def heal(self):
+        heal_amount = self.attributes['magic'] / self.max_hit_points
+        self.attributes['hit_points'] = min(self.max_hit_points, self.attributes['hit_points'] + heal_amount)
 
 class Monster(Entity):
     def __init__(self, x, y):

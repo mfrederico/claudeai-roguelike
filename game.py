@@ -113,7 +113,9 @@ class Game:
                 new_x, new_y = self.player.x + dx, self.player.y + dy
                 if self.map.is_passable(new_x, new_y):
                     self.player.move(dx, dy)
-                    self.message_log.add(f"Player moved {action}")
+                    self.player.heal()
+                    healed_amount = round(self.player.attributes['magic'] / self.player.max_hit_points, 2)
+                    self.message_log.add(f"Player moved {action} and healed {healed_amount} HP")
                     self.update_monsters()
                     self.check_for_combat()
                 else:
