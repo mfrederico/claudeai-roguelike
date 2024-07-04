@@ -96,8 +96,7 @@ class Game:
                 self.current_combat = Combat(self.player, monster)
                 return
 
-
-   def update(self):
+    def update(self):
         if self.in_combat:
             combat_result = self.handle_combat()
             if combat_result is not None:
@@ -110,7 +109,15 @@ class Game:
                 self.initialize_game()
                 self.message_log.add("Game restarted with the same map.")
             elif action in ['up', 'down', 'left', 'right']:
-                # ... (movement code remains the same)
+                dx, dy = {'up': (0, -1), 'down': (0, 1), 'left': (-1, 0), 'right': (1, 0)}[action]
+                new_x, new_y = self.player.x + dx, self.player.y + dy
+                if self.map.is_passable(new_x, new_y):
+                    self.player.move(dx, dy)
+                    self.message_log.add(f"Player moved {action}")
+                    self.update_monsters()
+                    self.check_for_combat()
+                else:
+                    self.message_log.add("Cannot move there")
             elif action == 'equip':
                 self.equip_armor()
         return True
@@ -123,14 +130,6 @@ class Game:
         result = self.player.equip_armor(armor_choice)
         self.message_log.add(result)
 
-    def run(self):
-        while True:
-            if not self.in_combat:
-                self.map.render(self.player, self.monsters)
-                self.message_log.display()
-                print("\nUse WASD to move, E to equip armor, Q to quit")
-            if not self.update():
-                break
 
     def handle_combat(self):
         self.current_combat.render_combat_screen()
@@ -163,3 +162,11 @@ class Game:
                 if self.map.is_passable(new_x, new_y):
                     monster.move(dx, dy)
 
+    def run(self):
+        while True:
+            if not self.in_combat:
+                self.map.render(self.player, self.monsters)
+                self.message_log.display()
+                print("\nUse WASD to move, E to equip armor, Q to quit")
+            if not self.update():
+                break
